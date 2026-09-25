@@ -7,8 +7,8 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class CallCenter {
-    public static final int totalCustomers=20;
-    public static final int totalAgents=2;
+    public static final int totalCustomers=30;
+    public static final int totalAgents=3;
     //shared data
     private final static Queue<Integer> arrivalQueue = new LinkedList<>();
     private final static Queue<Integer> serviceQueue = new LinkedList<>();
@@ -27,7 +27,7 @@ public class CallCenter {
             arrivalLock.unlock();
         }
     }
-    public static int greetCustomer() throws Exception{
+    public static int greetArrival() throws Exception{
         int customerID;
         arrivalLock.lock();
         try{
@@ -41,6 +41,16 @@ public class CallCenter {
             arrivalLock.unlock();
         }
         return customerID;
+    }
+    public static void addService(int customerID){
+        serviceLock.lock();
+        try {
+            //critical section
+            serviceQueue.add(customerID);
+            serviceNotEmpty.signal();
+        }finally{
+            serviceLock.unlock();
+        }
     }
     public static int takeCall() throws Exception{
         int customerID;
