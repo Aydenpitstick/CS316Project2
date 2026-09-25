@@ -10,7 +10,8 @@ public class CallCenter {
     public static final int totalCustomers=20;
     public static final int totalAgents=2;
     //shared data
-    private final static Queue<Integer> queue = new LinkedList<>();
+    private final static Queue<Integer> arrivalQueue = new LinkedList<>();
+    private final static Queue<Integer> serviceQueue = new LinkedList<>();
     private final static ReentrantLock arrivalLock = new ReentrantLock();
     private final static ReentrantLock serviceLock = new ReentrantLock();
     private final static Condition serviceNotEmpty = serviceLock.newCondition();
@@ -20,22 +21,22 @@ public class CallCenter {
         arrivalLock.lock();
         try {
             //critical section
-            queue.add(customerID);
+            arrivalQueue.add(customerID);
             arrivalNotEmpty.signal();
         }finally{
             arrivalLock.unlock();
         }
     }
-    public static int greetCustomer(){
+    public static int greetCustomer() throws Exception{
         int customerID;
         arrivalLock.lock();
         try{
-            while(queue.isEmpty()) {
+            while(arrivalQueue.isEmpty()) {
                 //await() releases the qLock
                 //puts thread to sleep
                 arrivalNotEmpty.await();
             }
-            customerID = queue.remove();
+            customerID = arrivalQueue.remove();
         }finally{
             arrivalLock.unlock();
         }
@@ -45,12 +46,12 @@ public class CallCenter {
         int customerID;
         serviceLock.lock();
         try{
-            while(queue.isEmpty()) {
+            while(serviceQueue.isEmpty()) {
                 //await() releases the qLock
                 //puts thread to sleep
                 serviceNotEmpty.await();
             }
-            customerID = queue.remove();
+            customerID = serviceQueue.remove();
         }finally{
             serviceLock.unlock();
         }
